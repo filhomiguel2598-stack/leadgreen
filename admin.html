@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeadGreen - Painel Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#060907] text-slate-100 p-4 md:p-8 min-h-screen">
+
+  <div class="max-w-5xl mx-auto space-y-8">
+    <div class="flex items-center justify-between border-b border-[#1f2d25] pb-4">
+      <h1 class="text-2xl font-black text-white">Painel <span class="text-[#00e676]">Administrativo</span></h1>
+    </div>
+
+    <!-- Formulário -->
+    <div class="bg-[#0d1310] p-6 rounded-2xl border border-[#1f2d25]">
+      <h2 id="formTitle" class="text-base font-bold text-[#00e676] mb-4">Cadastrar / Editar Cliente</h2>
+
+      <form id="clienteForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <input type="hidden" id="clienteId">
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">E-mail</label>
+          <input type="email" id="email" required class="w-full bg-[#121a15] border border-[#1f2d25] rounded-xl p-3 text-xs text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Senha</label>
+          <input type="text" id="senha" required class="w-full bg-[#121a15] border border-[#1f2d25] rounded-xl p-3 text-xs text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Validade da Licença</label>
+          <input type="date" id="validade" required class="w-full bg-[#121a15] border border-[#1f2d25] rounded-xl p-3 text-xs text-white">
+        </div>
+
+        <div class="flex items-end gap-2">
+          <button type="submit" id="btnSubmit" class="w-full py-3 rounded-xl bg-[#00e676] text-black font-extrabold text-xs">
+            Salvar Licença
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tabela de Clientes -->
+    <div class="bg-[#0d1310] p-6 rounded-2xl border border-[#1f2d25]">
+      <h2 class="text-base font-bold text-white mb-4">Clientes Cadastrados</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-[#1f2d25]">
+            <tr>
+              <th class="py-2">E-mail</th>
+              <th class="py-2">Senha</th>
+              <th class="py-2">Validade</th>
+              <th class="py-2 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaClientes" class="divide-y divide-[#1f2d25]"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://acazoliwrnnqfduvveer.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYXpvbGl3cm5ucWZkdXZ2ZWVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzOTU0MDcsImV4cCI6MjEwNjk3MTQwN30.0GHx9PYI6UFOhzNXorvoD5RwnrNSdUKGF9XEMFF0r0c";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    window.onload = carregarClientes;
+
+    async function carregarClientes() {
+      const { data } = await supabaseClient.from('clientes').select('*').order('validade', { ascending: true });
+      const tbody = document.getElementById('tabelaClientes');
+      tbody.innerHTML = '';
+
+      if (data) {
+        data.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="py-3 font-semibold text-white">${c.email}</td>
+            <td class="py-3 text-slate-300">${c.senha}</td>
+            <td class="py-3 text-slate-300">${c.validade}</td>
+            <td class="py-3 text-right space-x-2">
+              <button onclick="editarCliente('${c.id}', '${c.email}', '${c.senha}', '${c.validade}')" class="px-2 py-1 rounded bg-amber-500/20 text-amber-400">Editar</button>
+              <button onclick="excluirCliente('${c.id}')" class="px-2 py-1 rounded bg-red-500/20 text-red-400">Excluir</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    document.getElementById('clienteForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('clienteId').value;
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      const validade = document.getElementById('validade').value;
+
+      if (id) {
+        await supabaseClient.from('clientes').update({ email, senha, validade }).eq('id', id);
+      } else {
+        await supabaseClient.from('clientes').insert([{ email, senha, validade }]);
+      }
+
+      document.getElementById('clienteId').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('senha').value = '';
+      document.getElementById('validade').value = '';
+      carregarClientes();
+    });
+
+    function editarCliente(id, email, senha, validade) {
+      document.getElementById('clienteId').value = id;
+      document.getElementById('email').value = email;
+      document.getElementById('senha').value = senha;
+      document.getElementById('validade').value = validade;
+    }
+
+    async function excluirCliente(id) {
+      if (confirm("Excluir cliente?")) {
+        await supabaseClient.from('clientes').delete().eq('id', id);
+        carregarClientes();
+      }
+    }
+  </script>
+</body>
+</html>
