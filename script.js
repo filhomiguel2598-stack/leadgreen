@@ -31,18 +31,16 @@ const dddPorEstado = {
   RR: ["95"]
 };
 
-// Prefixos telefônicos válidos da ANATEL para celulares no Brasil (4 dígitos após o 9 inicial)
-const prefixosValidos = [
-  "9912", "9913", "9914", "9915", "9916", "9917", "9918", "9919",
-  "9811", "9812", "9813", "9814", "9815", "9816", "9817", "9818",
-  "9881", "9882", "9883", "9884", "9885", "9886", "9887", "9888",
-  "9961", "9962", "9963", "9964", "9965", "9966", "9967", "9968",
-  "9921", "9922", "9923", "9924", "9925", "9926", "9927", "9928",
-  "9841", "9842", "9843", "9844", "9845", "9846", "9847", "9848",
-  "9971", "9972", "9973", "9974", "9975", "9976", "9977", "9978"
+// Prefixos reais de 3 dígitos das operadoras (após o 9 obrigatório)
+const prefixosOperadoras = [
+  "912", "913", "914", "915", "916", "917", "918", "919",
+  "811", "812", "813", "814", "815", "816", "817", "818",
+  "881", "882", "883", "884", "885", "886", "887", "888",
+  "961", "962", "963", "964", "965", "966", "967", "968",
+  "921", "922", "923", "924", "925", "926", "927", "928"
 ];
 
-// Elementos do DOM
+// Elementos da página
 const selectUF = document.getElementById('uf');
 const selectDDD = document.getElementById('ddd');
 const btnStart = document.getElementById('btnStart');
@@ -56,7 +54,7 @@ let botInterval = null;
 let totalLeads = 0;
 const numerosJaProcessados = new Set();
 
-// Atualiza a lista de DDDs conforme a UF selecionada
+// Atualiza a lista de DDDs ao trocar o Estado
 function atualizarDDDs() {
   const ufSelecionada = selectUF.value;
   const ddds = dddPorEstado[ufSelecionada] || ["11"];
@@ -73,47 +71,27 @@ function atualizarDDDs() {
 selectUF.addEventListener('change', atualizarDDDs);
 atualizarDDDs();
 
-/**
- * Valida se a string possui exatamente 13 dígitos no formato DDI (55) + DDD (2) + NÚMERO (9)
- * Exemplo válido: 5534991423801 (13 dígitos)
- */
-function validarFormatoTelefone(numeroCompleto) {
-  const regexTelefone = /^55\d{2}9\d{8}$/;
-  return regexTelefone.test(numeroCompleto);
+// Gera exatamente 11 dígitos nacionais: DDD + 9 + Prefixo(3) + Final(4) = (XX) 9XXXX-XXXX
+function gerarNumeroCelularCompleto(ddd) {
+  const prefixo = prefixosOperadoras[Math.floor(Math.random() * prefixosOperadoras.length)];
+  const final = String(Math.floor(1000 + Math.random() * 9000)); // 4 dígitos finais
+  return `55${ddd}9${prefixo}${final}`;
 }
 
-/**
- * Formatação visual padronizada do número celular:
- * Entrada: "5534991423801" -> Saída: "(34) 99142-3801"
- */
-function formatarExibicao(numero) {
-  const ddd = numero.substring(2, 4);
-  const parte1 = numero.substring(4, 9);  // Ex: 99142 (5 dígitos)
-  const parte2 = numero.substring(9, 13); // Ex: 3801  (4 dígitos)
+// Formata para exibição visual: (XX) 9XXXX-XXXX
+function formatarParaExibicao(numRaw) {
+  const ddd = numRaw.substring(2, 4);
+  const parte1 = numRaw.substring(4, 9);  // 9 + 4 dígitos (ex: 99123)
+  const parte2 = numRaw.substring(9, 13); // 4 dígitos finais (ex: 4567)
   return `(${ddd}) ${parte1}-${parte2}`;
 }
 
-/**
- * Gera um número de telefone estritamente válido no padrão brasileiro
- */
-function gerarNumeroValido(ddd) {
-  const prefixo = prefixosValidos[Math.floor(Math.random() * prefixosValidos.length)];
-  const sufixoFinal = String(Math.floor(1000 + Math.random() * 9000)); 
-  return `55${ddd}${prefixo}${sufixoFinal}`;
-}
-
-// Inserção e renderização na tabela
+// Adiciona o contato na tabela
 function adicionarLeadNaTabela(numeroRaw) {
-  // Validação estrita: descarta qualquer número que não tenha 13 dígitos
-  if (!validarFormatoTelefone(numeroRaw)) {
-    console.warn("Número descartado por inconsistência de formato:", numeroRaw);
-    return;
-  }
-
   if (numerosJaProcessados.has(numeroRaw)) return;
   numerosJaProcessados.add(numeroRaw);
 
-  const numeroFormatado = formatarExibicao(numeroRaw);
+  const numeroFormatado = formatarParaExibicao(numeroRaw);
   const whatsappLink = `https://wa.me/${numeroRaw}`;
 
   const tr = document.createElement('tr');
@@ -131,7 +109,7 @@ function adicionarLeadNaTabela(numeroRaw) {
   countElement.textContent = totalLeads;
 }
 
-// Iniciar a busca
+// Botão Iniciar
 btnStart.addEventListener('click', () => {
   const ddd = selectDDD.value;
 
@@ -141,13 +119,14 @@ btnStart.addEventListener('click', () => {
   statusBadge.style.borderColor = "#00ff66";
   loadingSpinner.style.display = "block";
 
+  // Gera 1 número a cada 2.5 segundos
   botInterval = setInterval(() => {
-    const numeroCapturado = gerarNumeroValido(ddd);
-    adicionarLeadNaTabela(numeroCapturado);
+    const numero = gerarNumeroCelularCompleto(ddd);
+    adicionarLeadNaTabela(numero);
   }, 2500);
 });
 
-// Pausar a busca
+// Botão Pausar
 btnStop.addEventListener('click', () => {
   clearInterval(botInterval);
   btnStart.disabled = false;
