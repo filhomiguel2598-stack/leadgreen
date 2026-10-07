@@ -31,7 +31,7 @@ const dddPorEstado = {
   RR: ["95"]
 };
 
-// Prefixos reais de 3 dígitos das operadoras (após o 9 obrigatório)
+// Prefixos reais de 3 dígitos das operadoras no Brasil (após o 9 inicial)
 const prefixosOperadoras = [
   "912", "913", "914", "915", "916", "917", "918", "919",
   "811", "812", "813", "814", "815", "816", "817", "818",
@@ -40,7 +40,6 @@ const prefixosOperadoras = [
   "921", "922", "923", "924", "925", "926", "927", "928"
 ];
 
-// Elementos da página
 const selectUF = document.getElementById('uf');
 const selectDDD = document.getElementById('ddd');
 const btnStart = document.getElementById('btnStart');
@@ -54,7 +53,6 @@ let botInterval = null;
 let totalLeads = 0;
 const numerosJaProcessados = new Set();
 
-// Atualiza a lista de DDDs ao trocar o Estado
 function atualizarDDDs() {
   const ufSelecionada = selectUF.value;
   const ddds = dddPorEstado[ufSelecionada] || ["11"];
@@ -71,22 +69,29 @@ function atualizarDDDs() {
 selectUF.addEventListener('change', atualizarDDDs);
 atualizarDDDs();
 
-// Gera exatamente 11 dígitos nacionais: DDD + 9 + Prefixo(3) + Final(4) = (XX) 9XXXX-XXXX
+/**
+ * Gera um número com 13 dígitos exatos:
+ * 55 (DDI) + DDD (2 dígitos) + 9 (1 dígito) + Prefixo (3 dígitos) + Sufixo (4 dígitos)
+ * Exemplo: 5511991234567 (13 caracteres)
+ */
 function gerarNumeroCelularCompleto(ddd) {
   const prefixo = prefixosOperadoras[Math.floor(Math.random() * prefixosOperadoras.length)];
-  const final = String(Math.floor(1000 + Math.random() * 9000)); // 4 dígitos finais
-  return `55${ddd}9${prefixo}${final}`;
+  const sufixoNum = Math.floor(Math.random() * 10000);
+  const sufixo = String(sufixoNum).padStart(4, '0'); // Garante sempre 4 dígitos preenchendo com zeros à esquerda
+  return `55${ddd}9${prefixo}${sufixo}`;
 }
 
-// Formata para exibição visual: (XX) 9XXXX-XXXX
+/**
+ * Formatação visual:
+ * "5511991234567" -> "(11) 99123-4567"
+ */
 function formatarParaExibicao(numRaw) {
   const ddd = numRaw.substring(2, 4);
-  const parte1 = numRaw.substring(4, 9);  // 9 + 4 dígitos (ex: 99123)
-  const parte2 = numRaw.substring(9, 13); // 4 dígitos finais (ex: 4567)
+  const parte1 = numRaw.substring(4, 9);  // "99123"
+  const parte2 = numRaw.substring(9, 13); // "4567"
   return `(${ddd}) ${parte1}-${parte2}`;
 }
 
-// Adiciona o contato na tabela
 function adicionarLeadNaTabela(numeroRaw) {
   if (numerosJaProcessados.has(numeroRaw)) return;
   numerosJaProcessados.add(numeroRaw);
@@ -109,7 +114,6 @@ function adicionarLeadNaTabela(numeroRaw) {
   countElement.textContent = totalLeads;
 }
 
-// Botão Iniciar
 btnStart.addEventListener('click', () => {
   const ddd = selectDDD.value;
 
@@ -119,14 +123,12 @@ btnStart.addEventListener('click', () => {
   statusBadge.style.borderColor = "#00ff66";
   loadingSpinner.style.display = "block";
 
-  // Gera 1 número a cada 2.5 segundos
   botInterval = setInterval(() => {
     const numero = gerarNumeroCelularCompleto(ddd);
     adicionarLeadNaTabela(numero);
   }, 2500);
 });
 
-// Botão Pausar
 btnStop.addEventListener('click', () => {
   clearInterval(botInterval);
   btnStart.disabled = false;
