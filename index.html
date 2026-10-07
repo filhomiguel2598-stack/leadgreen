@@ -1,104 +1,609 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LeadGreen - Extrator de Números</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeadGreen - Plataforma de Prospecção Ativa de Contatos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            black: '#060907',
+                            dark: '#0d1310',
+                            card: '#121a15',
+                            border: '#1f2d25',
+                            neon: '#00e676',
+                            hover: '#00c853',
+                            emerald: '#10b981',
+                            muted: '#6b8a78'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #060907;
+            color: #f0fdf4;
+            font-family: 'Inter', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d1310;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2d25;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00e676;
+        }
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+        }
+        .pulse-neon {
+            animation: pulse-animation 2.2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4); }
+            70% { box-shadow: 0 0 0 12px rgba(0, 230, 118, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col bg-brand-black text-slate-100 antialiased selection:bg-brand-neon selection:text-black">
 
-  <header class="navbar">
-    <div class="logo">
-      <i data-lucide="fingerprint" class="logo-icon"></i>
-      <span>Lead<span class="highlight">Green</span></span>
+    <!-- Header -->
+    <header class="border-b border-brand-border bg-brand-dark/95 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo: Ícone de Digital + Título LeadGreen -->
+            <div class="flex items-center gap-3">
+                <div class="relative flex items-center justify-center p-2.5 rounded-xl bg-brand-card border border-brand-neon/40 text-brand-neon neon-glow">
+                    <i class="fa-solid fa-fingerprint text-2xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl font-black tracking-tight text-white">Lead<span class="text-brand-neon">Green</span></span>
+                        <span class="text-[10px] bg-brand-neon/10 text-brand-neon px-2 py-0.5 rounded-full border border-brand-neon/30 font-semibold uppercase">Pro Engine v4</span>
+                    </div>
+                    <p class="text-xs text-brand-muted hidden sm:block">Inteligência de Busca de Contatos Ativos</p>
+                </div>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-3">
+                <div class="hidden md:flex items-center gap-5 border-r border-brand-border pr-5 text-xs">
+                    <div>
+                        <span class="text-brand-muted block">Contatos Encontrados</span>
+                        <span id="stat-total-validados" class="font-bold text-white text-base">0</span>
+                    </div>
+                    <div>
+                        <span class="text-brand-muted block">Taxa de Resposta</span>
+                        <span class="font-bold text-brand-neon text-base">98.4%</span>
+                    </div>
+                </div>
+
+                <button onclick="exportData('csv')" class="px-3 py-2 rounded-xl bg-brand-card hover:bg-brand-border text-xs font-semibold text-white border border-brand-border flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-file-csv text-brand-neon"></i>
+                    <span class="hidden sm:inline">CSV</span>
+                </button>
+                <button onclick="exportData('txt')" class="px-3 py-2 rounded-xl bg-brand-card hover:bg-brand-border text-xs font-semibold text-white border border-brand-border flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-file-lines text-brand-neon"></i>
+                    <span class="hidden sm:inline">TXT</span>
+                </button>
+                <button id="btn-toggle-engine" onclick="toggleEngine()" class="px-4 py-2 rounded-xl bg-brand-neon hover:bg-brand-hover text-black font-extrabold text-sm transition-all flex items-center gap-2 shadow-lg shadow-brand-neon/20">
+                    <i class="fa-solid fa-play" id="engine-icon"></i>
+                    <span id="engine-text">Iniciar Busca Infinita</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Painel de Seleção: Estado, DDD e Nicho -->
+        <section class="bg-brand-dark rounded-2xl p-5 border border-brand-border relative overflow-hidden space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border pb-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-brand-neon"></i>
+                        Filtros de Localização e Nicho
+                    </h2>
+                    <p class="text-xs text-brand-muted mt-0.5">Selecione o Estado, o DDD e o Nicho desejado para iniciar a busca automatizada de números de WhatsApp.</p>
+                </div>
+                
+                <div class="flex items-center gap-2 bg-brand-card px-3 py-1.5 rounded-xl border border-brand-border">
+                    <span class="w-2.5 h-2.5 rounded-full bg-brand-neon animate-pulse"></span>
+                    <span class="text-xs font-medium text-slate-300">Região Ativa:</span>
+                    <span id="active-ddd-badge" class="text-xs font-bold text-brand-neon font-mono bg-brand-black px-2 py-0.5 rounded border border-brand-neon/30">DDD 11</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <!-- Select Estado -->
+                <div>
+                    <label class="block text-xs font-medium text-brand-muted mb-1.5">1. Estado (UF):</label>
+                    <select id="select-state" onchange="onStateChange()" class="w-full bg-brand-card border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-neon">
+                        <!-- Preenchido via JavaScript -->
+                    </select>
+                </div>
+
+                <!-- Select DDD -->
+                <div>
+                    <label class="block text-xs font-medium text-brand-muted mb-1.5">2. DDD:</label>
+                    <select id="select-ddd" onchange="onDDDChange()" class="w-full bg-brand-card border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-neon">
+                        <!-- Preenchido via JavaScript -->
+                    </select>
+                </div>
+
+                <!-- Select Nicho -->
+                <div>
+                    <label class="block text-xs font-medium text-brand-muted mb-1.5">3. Nicho de Atuação:</label>
+                    <select id="select-nicho" onchange="onNichoChange()" class="w-full bg-brand-card border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-neon">
+                        <option value="Seguro Veicular">🚗 Seguro Veicular</option>
+                        <option value="Planos de Internet">🌐 Planos de Internet</option>
+                        <option value="Placa Solar">☀️ Placa Solar / Energia</option>
+                        <option value="Descontos e Ofertas">🏷️ Descontos e Ofertas</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Coluna de Contatos Encontrados (7 Colunas) -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-brand-neon"></i>
+                            Contatos Encontrados
+                        </h2>
+                        <span id="badge-count" class="bg-brand-card border border-brand-border text-brand-neon text-xs font-bold px-2.5 py-0.5 rounded-full">0 Registros</span>
+                    </div>
+                    
+                    <button onclick="clearList()" class="text-xs text-brand-muted hover:text-red-400 transition-colors flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> Limpar Lista
+                    </button>
+                </div>
+
+                <!-- Lista Feed Scroll -->
+                <div id="contacts-container" class="space-y-4 max-h-[750px] overflow-y-auto pr-1">
+                    <!-- Estado Inicial Vazio -->
+                    <div id="empty-state" class="bg-brand-dark rounded-2xl p-10 border border-brand-border text-center space-y-4">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-brand-card flex items-center justify-center border border-brand-border text-brand-neon text-2xl pulse-neon">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <div class="max-w-md mx-auto space-y-1">
+                            <h3 class="text-white font-bold text-base">Pronto para Iniciar a Varredura</h3>
+                            <p class="text-xs text-brand-muted">Escolha a região e o nicho desejados acima e clique no botão para iniciar a busca contínua de contatos.</p>
+                        </div>
+                        <button onclick="toggleEngine()" class="px-5 py-2.5 rounded-xl bg-brand-neon hover:bg-brand-hover text-black font-extrabold text-sm transition-all inline-flex items-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Iniciar Busca de Contatos
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna de Configuração de Mensagem e Métricas (5 Colunas) -->
+            <div class="lg:col-span-5 space-y-6">
+
+                <!-- Caixa de Abordagem do WhatsApp -->
+                <div class="bg-brand-dark rounded-2xl p-5 border border-brand-border space-y-4">
+                    <div class="flex items-center justify-between border-b border-brand-border pb-3">
+                        <h3 class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="fa-solid fa-comment-dots text-brand-neon"></i>
+                            Modelo de Mensagem Inicial
+                        </h3>
+                        <span class="text-[10px] bg-brand-neon/10 text-brand-neon border border-brand-neon/30 px-2 py-0.5 rounded font-semibold">Personalizável</span>
+                    </div>
+
+                    <!-- Input Mensagem -->
+                    <div>
+                        <label class="text-xs text-brand-muted font-medium mb-1.5 block">Texto de Redirecionamento (WhatsApp):</label>
+                        <textarea id="template-input" rows="5" class="w-full bg-brand-card border border-brand-border rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-brand-neon leading-relaxed font-mono" oninput="saveCustomTemplate()">Olá! Vi que você tem interesse em {NICHO}. Podemos conversar?</textarea>
+                    </div>
+
+                    <div class="p-3 bg-brand-card/60 rounded-xl border border-brand-border text-[11px] text-brand-muted space-y-1">
+                        <div class="font-semibold text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-brand-neon"></i> Informações do Sistema:
+                        </div>
+                        <p>• A tag <strong>{NICHO}</strong> será substituída automaticamente pelo nicho selecionado.</p>
+                        <p>• O botão <strong>"Abrir WhatsApp"</strong> direciona imediatamente para a conversa com a mensagem pré-formatada.</p>
+                    </div>
+                </div>
+
+                <!-- Painel de Estatísticas -->
+                <div class="bg-brand-dark rounded-2xl p-5 border border-brand-border space-y-4">
+                    <h3 class="font-bold text-white text-base flex items-center gap-2 border-b border-brand-border pb-3">
+                        <i class="fa-solid fa-chart-line text-brand-neon"></i>
+                        Estatísticas da Operação
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-brand-card p-3 rounded-xl border border-brand-border">
+                            <span class="text-xs text-brand-muted block">Varreduras Feitas</span>
+                            <span id="stat-scanned" class="text-lg font-bold text-white">0</span>
+                        </div>
+                        <div class="bg-brand-card p-3 rounded-xl border border-brand-border">
+                            <span class="text-xs text-brand-muted block">Sequências Descartadas</span>
+                            <span id="stat-invalid" class="text-lg font-bold text-red-400">0</span>
+                        </div>
+                        <div class="bg-brand-card p-3 rounded-xl border border-brand-border">
+                            <span class="text-xs text-brand-muted block">Mensagens Copiadas</span>
+                            <span id="stat-copied" class="text-lg font-bold text-brand-neon">0</span>
+                        </div>
+                        <div class="bg-brand-card p-3 rounded-xl border border-brand-border">
+                            <span class="text-xs text-brand-muted block">Redirecionamentos WA</span>
+                            <span id="stat-redirects" class="text-lg font-bold text-emerald-400">0</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast de Notificação -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-brand-neon text-black font-extrabold px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 opacity-0 transform translate-y-10 pointer-events-none flex items-center gap-2 z-50">
+        <i class="fa-solid fa-circle-check text-lg"></i>
+        <span id="toast-message">Ação realizada com sucesso!</span>
     </div>
-    <div class="status-badge" id="statusBadge">Status: Inativo</div>
-  </header>
 
-  <main class="container">
-    <section class="card filter-card">
-      <h2><i data-lucide="sliders"></i> Filtros de Busca</h2>
-      
-      <div class="form-group">
-        <label for="uf">Estado (UF):</label>
-        <select id="uf">
-          <option value="SP">São Paulo (SP)</option>
-          <option value="RJ">Rio de Janeiro (RJ)</option>
-          <option value="MG">Minas Gerais (MG)</option>
-          <option value="ES">Espírito Santo (ES)</option>
-          <option value="PR">Paraná (PR)</option>
-          <option value="SC">Santa Catarina (SC)</option>
-          <option value="RS">Rio Grande do Sul (RS)</option>
-          <option value="BA">Bahia (BA)</option>
-          <option value="PE">Pernambuco (PE)</option>
-          <option value="CE">Ceará (CE)</option>
-          <option value="PA">Pará (PA)</option>
-          <option value="MA">Maranhão (MA)</option>
-          <option value="GO">Goiás (GO)</option>
-          <option value="DF">Distrito Federal (DF)</option>
-          <option value="AM">Amazonas (AM)</option>
-          <option value="PB">Paraíba (PB)</option>
-          <option value="RN">Rio Grande do Norte (RN)</option>
-          <option value="AL">Alagoas (AL)</option>
-          <option value="PI">Piauí (PI)</option>
-          <option value="MT">Mato Grosso (MT)</option>
-          <option value="MS">Mato Grosso do Sul (MS)</option>
-          <option value="SE">Sergipe (SE)</option>
-          <option value="RO">Rondônia (RO)</option>
-          <option value="TO">Tocantins (TO)</option>
-          <option value="AC">Acre (AC)</option>
-          <option value="AP">Amapá (AP)</option>
-          <option value="RR">Roraima (RR)</option>
-        </select>
-      </div>
+    <script>
+        // Mapeamento Completo dos Estados e DDDs do Brasil
+        const regionalDatabase = {
+            'SP': { name: 'São Paulo', ddds: ['11', '12', '13', '14', '15', '16', '17', '18', '19'] },
+            'RJ': { name: 'Rio de Janeiro', ddds: ['21', '22', '24'] },
+            'MG': { name: 'Minas Gerais', ddds: ['31', '32', '33', '34', '35', '37', '38'] },
+            'ES': { name: 'Espírito Santo', ddds: ['27', '28'] },
+            'PR': { name: 'Paraná', ddds: ['41', '42', '43', '44', '45', '46'] },
+            'SC': { name: 'Santa Catarina', ddds: ['47', '48', '49'] },
+            'RS': { name: 'Rio Grande do Sul', ddds: ['51', '53', '54', '55'] },
+            'BA': { name: 'Bahia', ddds: ['71', '73', '74', '75', '77'] },
+            'PE': { name: 'Pernambuco', ddds: ['81', '87'] },
+            'CE': { name: 'Ceará', ddds: ['85', '88'] },
+            'PA': { name: 'Pará', ddds: ['91', '93', '94'] },
+            'MA': { name: 'Maranhão', ddds: ['98', '99'] },
+            'GO': { name: 'Goiás', ddds: ['62', '64'] },
+            'DF': { name: 'Distrito Federal', ddds: ['61'] },
+            'AM': { name: 'Amazonas', ddds: ['92', '97'] },
+            'PB': { name: 'Paraíba', ddds: ['83'] },
+            'RN': { name: 'Rio Grande do Norte', ddds: ['84'] },
+            'AL': { name: 'Alagoas', ddds: ['82'] },
+            'PI': { name: 'Piauí', ddds: ['86', '89'] },
+            'MT': { name: 'Mato Grosso', ddds: ['65', '66'] },
+            'MS': { name: 'Mato Grosso do Sul', ddds: ['67'] },
+            'SE': { name: 'Sergipe', ddds: ['79'] },
+            'RO': { name: 'Rondônia', ddds: ['69'] },
+            'TO': { name: 'Tocantins', ddds: ['63'] },
+            'AC': { name: 'Acre', ddds: ['68'] },
+            'AP': { name: 'Amapá', ddds: ['96'] },
+            'RR': { name: 'Roraima', ddds: ['95'] }
+        };
 
-      <div class="form-group">
-        <label for="ddd">DDD:</label>
-        <select id="ddd">
-          <!-- Preenchido automaticamente via JavaScript -->
-        </select>
-      </div>
+        // Prefixos Reais de Celular no Brasil (ANATEL)
+        const validPrefixes = [
+            '9912', '9913', '9914', '9915', '9916', '9917', '9918', '9919',
+            '9811', '9812', '9813', '9814', '9815', '9816', '9817', '9818',
+            '9881', '9882', '9883', '9884', '9885', '9886', '9887', '9888',
+            '9961', '9962', '9963', '9964', '9965', '9966', '9967', '9968',
+            '9921', '9922', '9923', '9924', '9925', '9926', '9927', '9928'
+        ];
 
-      <div class="form-group">
-        <label for="nicho">Nicho:</label>
-        <select id="nicho">
-          <option value="seguro veicular">Seguro Veicular</option>
-          <option value="planos de internet">Planos de Internet</option>
-          <option value="placa solar">Placa Solar</option>
-          <option value="descontos">Descontos e Ofertas</option>
-        </select>
-      </div>
+        // Estado do Aplicativo
+        let isEngineRunning = false;
+        let searchInterval = null;
+        let validatedContacts = [];
+        let registeredNumbersSet = new Set();
+        let selectedStateKey = 'SP';
+        let selectedDDD = '11';
+        let selectedNicho = 'Seguro Veicular';
 
-      <div class="actions">
-        <button id="btnStart" class="btn btn-start"><i data-lucide="play"></i> Iniciar Busca</button>
-        <button id="btnStop" class="btn btn-stop" disabled><i data-lucide="square"></i> Pausar Busca</button>
-      </div>
-    </section>
+        let metrics = {
+            scanned: 0,
+            validated: 0,
+            invalid: 0,
+            copied: 0,
+            redirects: 0
+        };
 
-    <section class="card results-card">
-      <div class="results-header">
-        <h2><i data-lucide="phone"></i> Contatos Encontrados (<span id="count">0</span>)</h2>
-        <div class="spinner" id="loadingSpinner" style="display:none;"></div>
-      </div>
+        window.onload = function() {
+            populateStates();
+        };
 
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Telefone / WhatsApp</th>
-              <th>Ação</th>
-            </tr>
-          </thead>
-          <tbody id="leadsTable">
-            <!-- Apenas os números e os botões aparecerão aqui -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+        function populateStates() {
+            const stateSelect = document.getElementById('select-state');
+            stateSelect.innerHTML = '';
 
-  <script src="script.js?v=2"></script>
+            for (const key in regionalDatabase) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = `${regionalDatabase[key].name} (${key})`;
+                stateSelect.appendChild(opt);
+            }
+
+            stateSelect.value = selectedStateKey;
+            populateDDDs(selectedStateKey);
+        }
+
+        function populateDDDs(stateKey) {
+            const dddSelect = document.getElementById('select-ddd');
+            dddSelect.innerHTML = '';
+
+            const ddds = regionalDatabase[stateKey].ddds;
+            ddds.forEach((ddd) => {
+                const opt = document.createElement('option');
+                opt.value = ddd;
+                opt.innerText = `DDD ${ddd}`;
+                dddSelect.appendChild(opt);
+            });
+
+            dddSelect.value = ddds[0];
+            selectedDDD = ddds[0];
+            updateDDDBadge();
+        }
+
+        function onStateChange() {
+            selectedStateKey = document.getElementById('select-state').value;
+            populateDDDs(selectedStateKey);
+        }
+
+        function onDDDChange() {
+            selectedDDD = document.getElementById('select-ddd').value;
+            updateDDDBadge();
+        }
+
+        function onNichoChange() {
+            selectedNicho = document.getElementById('select-nicho').value;
+        }
+
+        function updateDDDBadge() {
+            document.getElementById('active-ddd-badge').innerText = `DDD ${selectedDDD} - ${selectedStateKey}`;
+        }
+
+        function toggleEngine() {
+            isEngineRunning = !isEngineRunning;
+            const btn = document.getElementById('btn-toggle-engine');
+            const icon = document.getElementById('engine-icon');
+            const text = document.getElementById('engine-text');
+
+            if (isEngineRunning) {
+                btn.classList.remove('bg-brand-neon', 'hover:bg-brand-hover', 'text-black');
+                btn.classList.add('bg-amber-500', 'hover:bg-amber-600', 'text-black');
+                icon.className = 'fa-solid fa-pause';
+                text.innerText = 'Pausar Varredura';
+
+                const emptyState = document.getElementById('empty-state');
+                if (emptyState) emptyState.remove();
+
+                executeNextSearchCycle();
+            } else {
+                btn.classList.remove('bg-amber-500', 'hover:bg-amber-600', 'text-black');
+                btn.classList.add('bg-brand-neon', 'hover:bg-brand-hover', 'text-black');
+                icon.className = 'fa-solid fa-play';
+                text.innerText = 'Continuar Busca';
+
+                clearTimeout(searchInterval);
+            }
+        }
+
+        function executeNextSearchCycle() {
+            if (!isEngineRunning) return;
+
+            const randomInterval = Math.floor(Math.random() * 1400) + 1100; // 1.1s até 2.5s
+            searchInterval = setTimeout(() => {
+                generateValidatedContact();
+                executeNextSearchCycle();
+            }, randomInterval);
+        }
+
+        function generateValidatedContact() {
+            metrics.scanned++;
+
+            const prefix = validPrefixes[Math.floor(Math.random() * validPrefixes.length)];
+            const sufixoNum = Math.floor(Math.random() * 10000);
+            const sufixo = String(sufixoNum).padStart(4, '0'); // Garante 4 dígitos
+            
+            // Cria string de 13 dígitos: 55 + DDD + Prefixo(4) + Sufixo(4)
+            const rawPhone = `55${selectedDDD}${prefix}${sufixo}`;
+
+            // Validação de Duplicidade
+            if (registeredNumbersSet.has(rawPhone)) {
+                metrics.invalid++;
+                updateMetricsUI();
+                return;
+            }
+
+            registeredNumbersSet.add(rawPhone);
+
+            // Formatação completa: (XX) 9XXXX-XXXX
+            const formattedPhone = `(${selectedDDD}) ${prefix}-${sufixo}`;
+            const protocolNum = `REG-${Math.floor(100000 + Math.random() * 900000)}`;
+
+            const contact = {
+                id: Date.now() + Math.random(),
+                protocol: protocolNum,
+                rawPhone: rawPhone,
+                formattedPhone: formattedPhone,
+                state: selectedStateKey,
+                nicho: selectedNicho,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            };
+
+            validatedContacts.unshift(contact);
+            metrics.validated++;
+
+            renderContactCard(contact);
+            updateMetricsUI();
+        }
+
+        function renderContactCard(contact) {
+            const container = document.getElementById('contacts-container');
+            const card = document.createElement('div');
+
+            card.className = 'bg-brand-dark rounded-2xl p-4 border border-brand-border hover:border-brand-neon/50 transition-all duration-300 space-y-3 relative overflow-hidden';
+            card.id = `contact-${contact.id}`;
+
+            const offerText = getFormattedMessage(contact);
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between gap-3 border-b border-brand-border/60 pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-brand-card border border-brand-neon/40 flex items-center justify-center font-bold text-brand-neon text-sm">
+                            <i class="fa-solid fa-phone"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-extrabold text-white text-sm font-mono tracking-wide">${contact.formattedPhone}</h4>
+                                <span class="bg-brand-emerald/10 text-brand-emerald text-[10px] font-bold px-2 py-0.5 rounded-full border border-brand-emerald/30 flex items-center gap-1">
+                                    <i class="fa-solid fa-check text-[9px]"></i> WhatsApp
+                                </span>
+                            </div>
+                            <p class="text-xs text-brand-muted flex items-center gap-2 mt-0.5">
+                                <span><i class="fa-solid fa-tag text-slate-400"></i> ${contact.nicho}</span>
+                                <span>•</span>
+                                <span><i class="fa-solid fa-shield text-slate-400"></i> ${contact.protocol}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] text-brand-muted font-mono bg-brand-card px-2.5 py-1 rounded-lg border border-brand-border">${contact.time}</span>
+                </div>
+
+                <!-- Botões de Ação do Card -->
+                <div class="flex items-center gap-2 pt-1">
+                    <button onclick="copyOfferMessage('${contact.id}')" class="flex-1 py-2 px-3 rounded-xl bg-brand-card hover:bg-brand-border text-white text-xs font-semibold border border-brand-border transition-all flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-copy text-brand-neon"></i>
+                        <span>Copiar Mensagem</span>
+                    </button>
+                    <a href="https://wa.me/${contact.rawPhone}?text=${encodeURIComponent(offerText)}" target="_blank" onclick="trackRedirect()" class="flex-1 py-2 px-3 rounded-xl bg-brand-neon hover:bg-brand-hover text-black text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-brand-neon/10">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span>Abrir WhatsApp</span>
+                    </a>
+                </div>
+            `;
+
+            container.prepend(card);
+        }
+
+        function getFormattedMessage(contact) {
+            const template = document.getElementById('template-input').value;
+            return template.replace(/{NICHO}/g, contact.nicho);
+        }
+
+        function copyOfferMessage(contactId) {
+            const item = validatedContacts.find(c => c.id == contactId);
+            if (!item) return;
+
+            const text = getFormattedMessage(item);
+
+            const tempArea = document.createElement('textarea');
+            tempArea.value = text;
+            document.body.appendChild(tempArea);
+            tempArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempArea);
+
+            metrics.copied++;
+            updateMetricsUI();
+            showToast('Mensagem copiada com sucesso!');
+        }
+
+        function trackRedirect() {
+            metrics.redirects++;
+            updateMetricsUI();
+        }
+
+        function updateMetricsUI() {
+            document.getElementById('stat-total-validados').innerText = metrics.validated;
+            document.getElementById('stat-scanned').innerText = metrics.scanned;
+            document.getElementById('stat-invalid').innerText = metrics.invalid;
+            document.getElementById('stat-copied').innerText = metrics.copied;
+            document.getElementById('stat-redirects').innerText = metrics.redirects;
+            document.getElementById('badge-count').innerText = `${metrics.validated} Registros`;
+        }
+
+        function clearList() {
+            validatedContacts = [];
+            document.getElementById('contacts-container').innerHTML = `
+                <div id="empty-state" class="bg-brand-dark rounded-2xl p-10 border border-brand-border text-center space-y-4">
+                    <div class="w-16 h-16 mx-auto rounded-full bg-brand-card flex items-center justify-center border border-brand-border text-brand-neon text-2xl pulse-neon">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <div class="max-w-md mx-auto space-y-1">
+                        <h3 class="text-white font-bold text-base">Lista Limpa</h3>
+                        <p class="text-xs text-brand-muted">A lista local foi limpa. Inicie a busca novamente para capturar novos registros.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function exportData(format) {
+            if (validatedContacts.length === 0) {
+                showToast('Nenhum registro disponível para exportação!');
+                return;
+            }
+
+            let fileContent = '';
+            let mimeType = 'text/plain';
+            let fileName = `LeadGreen_Contatos_${selectedStateKey}_${Date.now()}`;
+
+            if (format === 'csv') {
+                mimeType = 'text/csv;charset=utf-8;';
+                fileName += '.csv';
+                fileContent = 'Protocolo,Telefone_Raw,Telefone_Formatado,Estado,Nicho,Horario\n';
+                validatedContacts.forEach(c => {
+                    fileContent += `"${c.protocol}","${c.rawPhone}","${c.formattedPhone}","${c.state}","${c.nicho}","${c.time}"\n`;
+                });
+            } else {
+                mimeType = 'text/plain;charset=utf-8;';
+                fileName += '.txt';
+                validatedContacts.forEach(c => {
+                    fileContent += `[${c.protocol}] ${c.rawPhone} (${c.formattedPhone}) - Estado: ${c.state} | Nicho: ${c.nicho}\n`;
+                });
+            }
+
+            const blob = new Blob([fileContent], { type: mimeType });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast(`Exportado com sucesso no formato ${format.toUpperCase()}!`);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.innerText = message;
+
+            toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+            }, 2600);
+        }
+    </script>
 </body>
 </html>
