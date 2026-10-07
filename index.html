@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeadGreen - Extrator de Números</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">
+      <i data-lucide="fingerprint" class="logo-icon"></i>
+      <span>Lead<span class="highlight">Green</span></span>
+    </div>
+    <div class="status-badge" id="statusBadge">Status: Inativo</div>
+  </header>
+
+  <main class="container">
+    <section class="card filter-card">
+      <h2><i data-lucide="sliders"></i> Filtros de Busca</h2>
+      
+      <div class="form-group">
+        <label for="uf">Estado (UF):</label>
+        <select id="uf">
+          <option value="SP">São Paulo (SP)</option>
+          <option value="RJ">Rio de Janeiro (RJ)</option>
+          <option value="MG">Minas Gerais (MG)</option>
+          <option value="ES">Espírito Santo (ES)</option>
+          <option value="PR">Paraná (PR)</option>
+          <option value="SC">Santa Catarina (SC)</option>
+          <option value="RS">Rio Grande do Sul (RS)</option>
+          <option value="BA">Bahia (BA)</option>
+          <option value="PE">Pernambuco (PE)</option>
+          <option value="CE">Ceará (CE)</option>
+          <option value="PA">Pará (PA)</option>
+          <option value="MA">Maranhão (MA)</option>
+          <option value="GO">Goiás (GO)</option>
+          <option value="DF">Distrito Federal (DF)</option>
+          <option value="AM">Amazonas (AM)</option>
+          <option value="PB">Paraíba (PB)</option>
+          <option value="RN">Rio Grande do Norte (RN)</option>
+          <option value="AL">Alagoas (AL)</option>
+          <option value="PI">Piauí (PI)</option>
+          <option value="MT">Mato Grosso (MT)</option>
+          <option value="MS">Mato Grosso do Sul (MS)</option>
+          <option value="SE">Sergipe (SE)</option>
+          <option value="RO">Rondônia (RO)</option>
+          <option value="TO">Tocantins (TO)</option>
+          <option value="AC">Acre (AC)</option>
+          <option value="AP">Amapá (AP)</option>
+          <option value="RR">Roraima (RR)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="ddd">DDD:</label>
+        <select id="ddd">
+          <!-- Atualizado automaticamente via JavaScript conforme a UF -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="nicho">Nicho:</label>
+        <select id="nicho">
+          <option value="seguro veicular">Seguro Veicular</option>
+          <option value="planos de internet">Planos de Internet</option>
+          <option value="placa solar">Placa Solar</option>
+          <option value="descontos">Descontos e Ofertas</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button id="btnStart" class="btn btn-start"><i data-lucide="play"></i> Iniciar Busca</button>
+        <button id="btnStop" class="btn btn-stop" disabled><i data-lucide="square"></i> Pausar Busca</button>
+      </div>
+    </section>
+
+    <section class="card results-card">
+      <div class="results-header">
+        <h2><i data-lucide="phone"></i> Contatos Encontrados (<span id="count">0</span>)</h2>
+        <div class="spinner" id="loadingSpinner" style="display:none;"></div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Telefone / WhatsApp</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="leadsTable">
+            <!-- Apenas os números e os botões aparecerão aqui -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
