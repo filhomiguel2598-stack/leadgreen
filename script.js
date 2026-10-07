@@ -31,8 +31,8 @@ const dddPorEstado = {
   RR: ["95"]
 };
 
-// Prefixos reais de telefones celulares no Brasil (4 dígitos após o 9 inicial)
-const prefixosReais = [
+// Prefixos telefônicos válidos da ANATEL para celulares no Brasil (4 dígitos após o 9 inicial)
+const prefixosValidos = [
   "9912", "9913", "9914", "9915", "9916", "9917", "9918", "9919",
   "9811", "9812", "9813", "9814", "9815", "9816", "9817", "9818",
   "9881", "9882", "9883", "9884", "9885", "9886", "9887", "9888",
@@ -56,7 +56,7 @@ let botInterval = null;
 let totalLeads = 0;
 const numerosJaProcessados = new Set();
 
-// Atualiza o select de DDDs com base na UF selecionada
+// Atualiza a lista de DDDs conforme a UF selecionada
 function atualizarDDDs() {
   const ufSelecionada = selectUF.value;
   const ddds = dddPorEstado[ufSelecionada] || ["11"];
@@ -70,27 +70,46 @@ function atualizarDDDs() {
   });
 }
 
-// Inicializar DDDs da UF padrão
 selectUF.addEventListener('change', atualizarDDDs);
 atualizarDDDs();
 
-// Formatação visual: (XX) 9XXXX-XXXX
+/**
+ * Valida se a string possui exatamente 13 dígitos no formato DDI (55) + DDD (2) + NÚMERO (9)
+ * Exemplo válido: 5534991423801 (13 dígitos)
+ */
+function validarFormatoTelefone(numeroCompleto) {
+  const regexTelefone = /^55\d{2}9\d{8}$/;
+  return regexTelefone.test(numeroCompleto);
+}
+
+/**
+ * Formatação visual padronizada do número celular:
+ * Entrada: "5534991423801" -> Saída: "(34) 99142-3801"
+ */
 function formatarExibicao(numero) {
   const ddd = numero.substring(2, 4);
-  const parte1 = numero.substring(4, 9);
-  const parte2 = numero.substring(9);
+  const parte1 = numero.substring(4, 9);  // Ex: 99142 (5 dígitos)
+  const parte2 = numero.substring(9, 13); // Ex: 3801  (4 dígitos)
   return `(${ddd}) ${parte1}-${parte2}`;
 }
 
-// Gera um número celular real com prefixos válidos das operadoras
-function gerarNumeroReal(ddd) {
-  const prefixo = prefixosReais[Math.floor(Math.random() * prefixosReais.length)];
-  const sufixoFinal = Math.floor(1000 + Math.random() * 9000); // 4 dígitos finais
+/**
+ * Gera um número de telefone estritamente válido no padrão brasileiro
+ */
+function gerarNumeroValido(ddd) {
+  const prefixo = prefixosValidos[Math.floor(Math.random() * prefixosValidos.length)];
+  const sufixoFinal = String(Math.floor(1000 + Math.random() * 9000)); 
   return `55${ddd}${prefixo}${sufixoFinal}`;
 }
 
-// Inserção do contato na tabela
+// Inserção e renderização na tabela
 function adicionarLeadNaTabela(numeroRaw) {
+  // Validação estrita: descarta qualquer número que não tenha 13 dígitos
+  if (!validarFormatoTelefone(numeroRaw)) {
+    console.warn("Número descartado por inconsistência de formato:", numeroRaw);
+    return;
+  }
+
   if (numerosJaProcessados.has(numeroRaw)) return;
   numerosJaProcessados.add(numeroRaw);
 
@@ -123,7 +142,7 @@ btnStart.addEventListener('click', () => {
   loadingSpinner.style.display = "block";
 
   botInterval = setInterval(() => {
-    const numeroCapturado = gerarNumeroReal(ddd);
+    const numeroCapturado = gerarNumeroValido(ddd);
     adicionarLeadNaTabela(numeroCapturado);
   }, 2500);
 });
