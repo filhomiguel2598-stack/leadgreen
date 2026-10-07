@@ -1,490 +1,73 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeadGreen - Extrator de Contatos</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Inter Font -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            black: '#060907',
-                            dark: '#0d1310',
-                            card: '#121a15',
-                            border: '#1f2d25',
-                            neon: '#00e676',
-                            hover: '#00c853',
-                            emerald: '#10b981',
-                            muted: '#6b8a78'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #060907;
-            color: #f0fdf4;
-            font-family: 'Inter', sans-serif;
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0d1310;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1f2d25;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #00e676;
-        }
-        .neon-glow {
-            box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
-        }
-        .pulse-neon {
-            animation: pulse-animation 2.2s infinite;
-        }
-        @keyframes pulse-animation {
-            0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4); }
-            70% { box-shadow: 0 0 0 12px rgba(0, 230, 118, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeadGreen - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="min-h-screen flex flex-col bg-brand-black text-slate-100 antialiased selection:bg-brand-neon selection:text-black">
+<body class="bg-[#060907] text-white flex items-center justify-center min-h-screen">
 
-    <!-- Header -->
-    <header class="border-b border-brand-border bg-brand-dark/95 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="relative flex items-center justify-center p-2.5 rounded-xl bg-brand-card border border-brand-neon/40 text-brand-neon neon-glow">
-                    <i class="fa-solid fa-fingerprint text-2xl"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl font-black tracking-tight text-white">Lead<span class="text-brand-neon">Green</span></span>
-                        <span class="text-[10px] bg-brand-neon/10 text-brand-neon px-2 py-0.5 rounded-full border border-brand-neon/30 font-semibold uppercase">Pro Engine v5</span>
-                    </div>
-                    <p class="text-xs text-brand-muted hidden sm:block">Inteligência de Varredura de Contatos</p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <div class="hidden md:flex items-center gap-5 border-r border-brand-border pr-5 text-xs">
-                    <div>
-                        <span class="text-brand-muted block">Contatos Capturados</span>
-                        <span id="stat-total-validados" class="font-bold text-white text-base">0</span>
-                    </div>
-                </div>
-
-                <button onclick="exportData('csv')" class="px-3 py-2 rounded-xl bg-brand-card hover:bg-brand-border text-xs font-semibold text-white border border-brand-border flex items-center gap-1.5 transition-all">
-                    <i class="fa-solid fa-file-csv text-brand-neon"></i>
-                    <span class="hidden sm:inline">CSV</span>
-                </button>
-                <button onclick="exportData('txt')" class="px-3 py-2 rounded-xl bg-brand-card hover:bg-brand-border text-xs font-semibold text-white border border-brand-border flex items-center gap-1.5 transition-all">
-                    <i class="fa-solid fa-file-lines text-brand-neon"></i>
-                    <span class="hidden sm:inline">TXT</span>
-                </button>
-                <button id="btn-toggle-engine" onclick="toggleEngine()" class="px-4 py-2 rounded-xl bg-brand-neon hover:bg-brand-hover text-black font-extrabold text-sm transition-all flex items-center gap-2 shadow-lg shadow-brand-neon/20">
-                    <i class="fa-solid fa-play" id="engine-icon"></i>
-                    <span id="engine-text">Iniciar Varredura</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-        <!-- Painel de Filtros de Região e Nicho -->
-        <section class="bg-brand-dark rounded-2xl p-5 border border-brand-border relative overflow-hidden space-y-4">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border pb-4">
-                <div>
-                    <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-brand-neon"></i>
-                        Filtros de Busca
-                    </h2>
-                    <p class="text-xs text-brand-muted mt-0.5">Selecione o Estado, DDD e o Nicho de interesse para filtrar os contatos.</p>
-                </div>
-                
-                <div class="flex items-center gap-2 bg-brand-card px-3 py-1.5 rounded-xl border border-brand-border">
-                    <span class="w-2.5 h-2.5 rounded-full bg-brand-neon animate-pulse"></span>
-                    <span class="text-xs font-medium text-slate-300">Região Selecionada:</span>
-                    <span id="active-ddd-badge" class="text-xs font-bold text-brand-neon font-mono bg-brand-black px-2 py-0.5 rounded border border-brand-neon/30">DDD 11</span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <!-- Select Estado -->
-                <div>
-                    <label class="block text-xs font-medium text-brand-muted mb-1.5">1. Estado (UF):</label>
-                    <select id="select-state" onchange="onStateChange()" class="w-full bg-brand-card border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-neon">
-                    </select>
-                </div>
-
-                <!-- Select DDD -->
-                <div>
-                    <label class="block text-xs font-medium text-brand-muted mb-1.5">2. DDD:</label>
-                    <select id="select-ddd" onchange="onDDDChange()" class="w-full bg-brand-card border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-neon">
-                    </select>
-                </div>
-
-                <!-- Select Nicho -->
-                <div>
-                    <label class="block text-xs font-medium text-brand-muted mb-1.5">3. Nicho:</label>
-                    <select id="select-nicho" onchange="onNichoChange()" class="w-full bg-brand-card border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-neon">
-                        <option value="Seguro Veicular">🚗 Seguro Veicular</option>
-                        <option value="Planos de Internet">🌐 Planos de Internet</option>
-                        <option value="Placa Solar">☀️ Placa Solar</option>
-                        <option value="Descontos e Ofertas">🏷️ Descontos e Ofertas</option>
-                    </select>
-                </div>
-            </div>
-        </section>
-
-        <!-- Container de Resultados de Tela Inteira -->
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-brands fa-whatsapp text-brand-neon"></i>
-                        Contatos Encontrados
-                    </h2>
-                    <span id="badge-count" class="bg-brand-card border border-brand-border text-brand-neon text-xs font-bold px-2.5 py-0.5 rounded-full">0 Registros</span>
-                </div>
-                
-                <button onclick="clearList()" class="text-xs text-brand-muted hover:text-red-400 transition-colors flex items-center gap-1">
-                    <i class="fa-solid fa-trash-can"></i> Limpar Lista
-                </button>
-            </div>
-
-            <!-- Feed de Contatos -->
-            <div id="contacts-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[750px] overflow-y-auto pr-1">
-                <div id="empty-state" class="col-span-full bg-brand-dark rounded-2xl p-10 border border-brand-border text-center space-y-4">
-                    <div class="w-16 h-16 mx-auto rounded-full bg-brand-card flex items-center justify-center border border-brand-border text-brand-neon text-2xl pulse-neon">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </div>
-                    <div class="max-w-md mx-auto space-y-1">
-                        <h3 class="text-white font-bold text-base">Aguardando Início da Varredura</h3>
-                        <p class="text-xs text-brand-muted">Escolha a região desejada acima e clique em "Iniciar Varredura" para começar a capturar os contatos.</p>
-                    </div>
-                    <button onclick="toggleEngine()" class="px-5 py-2.5 rounded-xl bg-brand-neon hover:bg-brand-hover text-black font-extrabold text-sm transition-all inline-flex items-center gap-2">
-                        <i class="fa-solid fa-bolt"></i> Iniciar Varredura
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-brand-neon text-black font-extrabold px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 opacity-0 transform translate-y-10 pointer-events-none flex items-center gap-2 z-50">
-        <i class="fa-solid fa-circle-check text-lg"></i>
-        <span id="toast-message">Ação concluída!</span>
+  <div class="w-full max-w-md bg-[#0d1310] p-8 rounded-2xl border border-[#1f2d25] shadow-2xl">
+    <div class="text-center mb-6">
+      <h1 class="text-3xl font-extrabold">Lead<span class="text-[#00e676]">Green</span></h1>
+      <p class="text-xs text-slate-400 mt-1">Área Exclusiva de Assinantes</p>
     </div>
 
-    <script>
-        // Mapeamento de DDDs por Estado
-        const regionalDatabase = {
-            'SP': { name: 'São Paulo', ddds: ['11', '12', '13', '14', '15', '16', '17', '18', '19'] },
-            'RJ': { name: 'Rio de Janeiro', ddds: ['21', '22', '24'] },
-            'MG': { name: 'Minas Gerais', ddds: ['31', '32', '33', '34', '35', '37', '38'] },
-            'ES': { name: 'Espírito Santo', ddds: ['27', '28'] },
-            'PR': { name: 'Paraná', ddds: ['41', '42', '43', '44', '45', '46'] },
-            'SC': { name: 'Santa Catarina', ddds: ['47', '48', '49'] },
-            'RS': { name: 'Rio Grande do Sul', ddds: ['51', '53', '54', '55'] },
-            'BA': { name: 'Bahia', ddds: ['71', '73', '74', '75', '77'] },
-            'PE': { name: 'Pernambuco', ddds: ['81', '87'] },
-            'CE': { name: 'Ceará', ddds: ['85', '88'] },
-            'PA': { name: 'Pará', ddds: ['91', '93', '94'] },
-            'MA': { name: 'Maranhão', ddds: ['98', '99'] },
-            'GO': { name: 'Goiás', ddds: ['62', '64'] },
-            'DF': { name: 'Distrito Federal', ddds: ['61'] },
-            'AM': { name: 'Amazonas', ddds: ['92', '97'] },
-            'PB': { name: 'Paraíba', ddds: ['83'] },
-            'RN': { name: 'Rio Grande do Norte', ddds: ['84'] },
-            'AL': { name: 'Alagoas', ddds: ['82'] },
-            'PI': { name: 'Piauí', ddds: ['86', '89'] },
-            'MT': { name: 'Mato Grosso', ddds: ['65', '66'] },
-            'MS': { name: 'Mato Grosso do Sul', ddds: ['67'] },
-            'SE': { name: 'Sergipe', ddds: ['79'] },
-            'RO': { name: 'Rondônia', ddds: ['69'] },
-            'TO': { name: 'Tocantins', ddds: ['63'] },
-            'AC': { name: 'Acre', ddds: ['68'] },
-            'AP': { name: 'Amapá', ddds: ['96'] },
-            'RR': { name: 'Roraima', ddds: ['95'] }
-        };
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">E-mail</label>
+        <input type="email" id="email" required class="w-full bg-[#121a15] border border-[#1f2d25] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-[#00e676]">
+      </div>
 
-        // Mapeamento de Prefixos Principais das Operadoras (Celular) por Região/DDD
-        const prefixosPorDDD = {
-            '11': ['998', '999', '995', '996', '981', '982', '983', '971', '972', '973'],
-            '21': ['991', '992', '981', '982', '971', '972', '998'],
-            '31': ['991', '992', '984', '988', '971', '975', '996'],
-            '71': ['991', '992', '981', '988', '996', '999', '982', '983'],
-            '41': ['991', '992', '984', '998', '999', '981'],
-            '85': ['991', '992', '988', '981', '996', '999'],
-            '81': ['991', '992', '988', '981', '996', '999'],
-            '51': ['991', '992', '984', '998', '999', '981'],
-            '62': ['991', '992', '984', '998', '999', '981']
-        };
+      <div>
+        <label class="block text-xs font-semibold text-slate-300 mb-1">Senha</label>
+        <input type="password" id="password" required class="w-full bg-[#121a15] border border-[#1f2d25] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-[#00e676]">
+      </div>
 
-        const prefixosPadrao = ['991', '992', '996', '998', '981', '988', '984', '997'];
+      <button type="submit" class="w-full py-3 rounded-xl bg-[#00e676] text-black font-extrabold hover:bg-[#00c853] transition-all">
+        Entrar na Plataforma
+      </button>
+    </form>
 
-        // App State
-        let isEngineRunning = false;
-        let searchInterval = null;
-        let validatedContacts = [];
-        let registeredNumbersSet = new Set();
-        let selectedStateKey = 'SP';
-        let selectedDDD = '11';
-        let selectedNicho = 'Seguro Veicular';
+    <div id="errorMsg" class="mt-4 text-xs text-red-400 text-center hidden"></div>
+  </div>
 
-        window.onload = function() {
-            populateStates();
-        };
+  <script>
+    const SUPABASE_URL = "https://acazoliwrnnqfduvveer.supabase.co";
+    const SUPABASE_ANON_KEY = "COLA_AQUI_A_TUA_CHAVE_ANON_LONGA";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function populateStates() {
-            const stateSelect = document.getElementById('select-state');
-            stateSelect.innerHTML = '';
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const errorMsg = document.getElementById('errorMsg');
 
-            for (const key in regionalDatabase) {
-                const opt = document.createElement('option');
-                opt.value = key;
-                opt.innerText = `${regionalDatabase[key].name} (${key})`;
-                stateSelect.appendChild(opt);
-            }
+      const { data, error } = await supabaseClient
+        .from('clientes')
+        .select('*')
+        .eq('email', email)
+        .eq('senha', password)
+        .single();
 
-            stateSelect.value = selectedStateKey;
-            populateDDDs(selectedStateKey);
-        }
+      if (error || !data) {
+        errorMsg.innerText = "E-mail ou senha incorretos.";
+        errorMsg.classList.remove('hidden');
+        return;
+      }
 
-        function populateDDDs(stateKey) {
-            const dddSelect = document.getElementById('select-ddd');
-            dddSelect.innerHTML = '';
+      const hoje = new Date().toISOString().split('T')[0];
+      if (data.validade < hoje) {
+        errorMsg.innerText = "A sua licença expirou. Entre em contacto para renovar!";
+        errorMsg.classList.remove('hidden');
+        return;
+      }
 
-            const ddds = regionalDatabase[stateKey].ddds;
-            ddds.forEach((ddd) => {
-                const opt = document.createElement('option');
-                opt.value = ddd;
-                opt.innerText = `DDD ${ddd}`;
-                dddSelect.appendChild(opt);
-            });
-
-            dddSelect.value = ddds[0];
-            selectedDDD = ddds[0];
-            updateDDDBadge();
-        }
-
-        function onStateChange() {
-            selectedStateKey = document.getElementById('select-state').value;
-            populateDDDs(selectedStateKey);
-        }
-
-        function onDDDChange() {
-            selectedDDD = document.getElementById('select-ddd').value;
-            updateDDDBadge();
-        }
-
-        function onNichoChange() {
-            selectedNicho = document.getElementById('select-nicho').value;
-        }
-
-        function updateDDDBadge() {
-            document.getElementById('active-ddd-badge').innerText = `DDD ${selectedDDD} - ${selectedStateKey}`;
-        }
-
-        function toggleEngine() {
-            isEngineRunning = !isEngineRunning;
-            const btn = document.getElementById('btn-toggle-engine');
-            const icon = document.getElementById('engine-icon');
-            const text = document.getElementById('engine-text');
-
-            if (isEngineRunning) {
-                btn.classList.remove('bg-brand-neon', 'hover:bg-brand-hover', 'text-black');
-                btn.classList.add('bg-amber-500', 'hover:bg-amber-600', 'text-black');
-                icon.className = 'fa-solid fa-pause';
-                text.innerText = 'Pausar Varredura';
-
-                const emptyState = document.getElementById('empty-state');
-                if (emptyState) emptyState.remove();
-
-                executeNextSearchCycle();
-            } else {
-                btn.classList.remove('bg-amber-500', 'hover:bg-amber-600', 'text-black');
-                btn.classList.add('bg-brand-neon', 'hover:bg-brand-hover', 'text-black');
-                icon.className = 'fa-solid fa-play';
-                text.innerText = 'Continuar Varredura';
-
-                clearTimeout(searchInterval);
-            }
-        }
-
-        function executeNextSearchCycle() {
-            if (!isEngineRunning) return;
-
-            const randomInterval = Math.floor(Math.random() * 1200) + 1300; // 1.3s a 2.5s
-            searchInterval = setTimeout(() => {
-                generateContact();
-                executeNextSearchCycle();
-            }, randomInterval);
-        }
-
-        function generateContact() {
-            const listaPrefixos = prefixosPorDDD[selectedDDD] || prefixosPadrao;
-            const prefixo = listaPrefixos[Math.floor(Math.random() * listaPrefixos.length)];
-            
-            // Gera 5 dígitos finais (ex: 12345)
-            const sufixoNum = Math.floor(Math.random() * 100000);
-            const sufixo = String(sufixoNum).padStart(5, '0');
-            
-            // Formato final de 13 dígitos: 55 + DDD + 9 + Prefixo(3) + Sufixo(5)
-            const rawPhone = `55${selectedDDD}9${prefixo}${sufixo.substring(1)}`;
-            const sufixoFinal4 = sufixo.substring(1);
-
-            if (registeredNumbersSet.has(rawPhone)) return;
-            registeredNumbersSet.add(rawPhone);
-
-            const formattedPhone = `(${selectedDDD}) 9${prefixo}-${sufixoFinal4}`;
-            const protocolNum = `REG-${Math.floor(100000 + Math.random() * 900000)}`;
-
-            const contact = {
-                id: Date.now() + Math.random(),
-                protocol: protocolNum,
-                rawPhone: rawPhone,
-                formattedPhone: formattedPhone,
-                state: selectedStateKey,
-                nicho: selectedNicho,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-            };
-
-            validatedContacts.unshift(contact);
-            renderContactCard(contact);
-            updateMetricsUI();
-        }
-
-        function renderContactCard(contact) {
-            const container = document.getElementById('contacts-container');
-            const card = document.createElement('div');
-
-            card.className = 'bg-brand-dark rounded-2xl p-4 border border-brand-border hover:border-brand-neon/50 transition-all duration-300 space-y-3 relative overflow-hidden';
-            card.id = `contact-${contact.id}`;
-
-            card.innerHTML = `
-                <div class="flex items-start justify-between gap-3 border-b border-brand-border/60 pb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-brand-card border border-brand-neon/40 flex items-center justify-center font-bold text-brand-neon text-sm">
-                            <i class="fa-solid fa-phone"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-extrabold text-white text-base font-mono tracking-wide">${contact.formattedPhone}</h4>
-                            <p class="text-xs text-brand-muted flex items-center gap-2 mt-0.5">
-                                <span><i class="fa-solid fa-tag text-slate-400"></i> ${contact.nicho}</span>
-                                <span>•</span>
-                                <span><i class="fa-solid fa-shield text-slate-400"></i> ${contact.protocol}</span>
-                            </p>
-                        </div>
-                    </div>
-                    <span class="text-[10px] text-brand-muted font-mono bg-brand-card px-2.5 py-1 rounded-lg border border-brand-border">${contact.time}</span>
-                </div>
-
-                <!-- Botão Único de Redirecionamento Direto ao WhatsApp -->
-                <div class="pt-1">
-                    <a href="https://wa.me/${contact.rawPhone}" target="_blank" class="w-full py-2.5 px-3 rounded-xl bg-brand-neon hover:bg-brand-hover text-black text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-md shadow-brand-neon/10">
-                        <i class="fa-brands fa-whatsapp text-base"></i>
-                        <span>Redirecionar ao WhatsApp</span>
-                    </a>
-                </div>
-            `;
-
-            container.prepend(card);
-        }
-
-        function updateMetricsUI() {
-            document.getElementById('stat-total-validados').innerText = validatedContacts.length;
-            document.getElementById('badge-count').innerText = `${validatedContacts.length} Registros`;
-        }
-
-        function clearList() {
-            validatedContacts = [];
-            registeredNumbersSet.clear();
-            document.getElementById('contacts-container').innerHTML = `
-                <div id="empty-state" class="col-span-full bg-brand-dark rounded-2xl p-10 border border-brand-border text-center space-y-4">
-                    <div class="w-16 h-16 mx-auto rounded-full bg-brand-card flex items-center justify-center border border-brand-border text-brand-neon text-2xl pulse-neon">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </div>
-                    <div class="max-w-md mx-auto space-y-1">
-                        <h3 class="text-white font-bold text-base">Lista Limpa</h3>
-                        <p class="text-xs text-brand-muted">A lista local foi limpa. Inicie a varredura novamente para capturar novos registros.</p>
-                    </div>
-                </div>
-            `;
-            updateMetricsUI();
-        }
-
-        function exportData(format) {
-            if (validatedContacts.length === 0) {
-                showToast('Nenhum registro disponível para exportação!');
-                return;
-            }
-
-            let fileContent = '';
-            let mimeType = 'text/plain';
-            let fileName = `LeadGreen_Contatos_${selectedStateKey}_${Date.now()}`;
-
-            if (format === 'csv') {
-                mimeType = 'text/csv;charset=utf-8;';
-                fileName += '.csv';
-                fileContent = 'Protocolo,Telefone_Raw,Telefone_Formatado,Estado,Nicho,Horario\n';
-                validatedContacts.forEach(c => {
-                    fileContent += `"${c.protocol}","${c.rawPhone}","${c.formattedPhone}","${c.state}","${c.nicho}","${c.time}"\n`;
-                });
-            } else {
-                mimeType = 'text/plain;charset=utf-8;';
-                fileName += '.txt';
-                validatedContacts.forEach(c => {
-                    fileContent += `[${c.protocol}] ${c.rawPhone} (${c.formattedPhone}) - Estado: ${c.state} | Nicho: ${c.nicho}\n`;
-                });
-            }
-
-            const blob = new Blob([fileContent], { type: mimeType });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            showToast(`Exportado em ${format.toUpperCase()} com sucesso!`);
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            toastMessage.innerText = message;
-
-            toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
-            toast.classList.add('opacity-100', 'translate-y-0');
-
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
-            }, 2600);
-        }
-    </script>
+      localStorage.setItem('usuarioLogado', email);
+      window.location.href = "dashboard.html";
+    });
+  </script>
 </body>
 </html>
